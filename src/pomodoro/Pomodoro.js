@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import classNames from "../utils/class-names";
 import useInterval from "../utils/useInterval";
-import hoursToDuration, {secondsToDuration} from 
-"../utils/duration/index.js"
+import SetMessage, {RemainingMessage} from "./messages";
+import FocusDuration, {BreakDuration} from "./FindDuration";
+
 
 function Pomodoro() {
   // Timer starts out paused
@@ -11,9 +12,9 @@ function Pomodoro() {
   const [breakTime, setBreakTime] = useState(5);
   const [initialFocus, setInitialFocus] = useState(25);
   const [initialBreak, setInitialBreak] = useState(5);
-  const [paused, setPaused] = useState(false);
-  const [progressVal, setProgressVal] = useState(0);
   const [progressPercent, setProgressPercent] = useState(100);
+  const [progressVal, setProgressVal] = useState(0);
+  const [paused, setPaused] = useState(false);
   
 
    let alarm = new Audio(`http://localhost:3000/public/alarm/submarine-dive-horn.mp3`)
@@ -90,13 +91,13 @@ function Pomodoro() {
        if(time > 0) {
          setTime(time - 1/60)
          setProgressVal(time)
-         setProgressPercent(getProgressPercent(time, initialFocus))
+         setProgressPercent(time/initialFocus * 100)
        }
       
       else if(time === 0 && breakTime > 0) {
         setBreakTime(breakTime - 1/60)
         setProgressVal(initialFocus - breakTime)
-        setProgressPercent(getProgressPercent(breakTime, initialBreak))
+        setProgressPercent((breakTime/initialBreak * 100))
       }
       else if (breakTime <= 0 && time <= 0) {
         setTime(initialFocus)
@@ -110,35 +111,6 @@ function Pomodoro() {
     },
     isTimerRunning ? 1000 : null
   );
-
-  const getProgressPercent = (currentTime, totalTime) => {
-
-    return (currentTime/totalTime * 100)
-  }
-  
-    const setMessage = () => {
-      let message = ""
-  if(time === 0 && breakTime !==0) {
-    message = `On Break for ${hoursToDuration(initialBreak)} minutes`
-  }
-  else if (paused) {message = "Paused"}
-  else {
-    message = `Focusing for ${hoursToDuration(initialFocus)} minutes`
-  }
-      return message
-    }
-
-  const RemainingMessage = () => {
-    let message = ""
-
-    if(time === 0 && breakTime !== 0) {
-      message = `${secondsToDuration(breakTime*60)} remaining`
-    }
-    else {
-      message = `${secondsToDuration(time*60)} remaining`
-    }
-    return message
-  }
  
   //need to fix these return statements
   return (
@@ -148,7 +120,7 @@ function Pomodoro() {
           <div className="input-group input-group-lg mb-2">
             <span className="input-group-text" data-testid="duration-focus">
               {/* TODO: Update this text to display the current focus session duration */}
-              Focus Duration: {hoursToDuration(initialFocus)}
+              <FocusDuration initialFocus={initialFocus}/>
             </span>
             <div className="input-group-append">
               {/* TODO: Implement decreasing focus duration and disable during a focus or break session */}
@@ -177,7 +149,7 @@ function Pomodoro() {
             <div className="input-group input-group-lg mb-2">
               <span className="input-group-text" data-testid="duration-break">
                 {/* TODO: Update this text to display the current break session duration */}
-                Break Duration: {hoursToDuration(initialBreak)}
+                <BreakDuration initialBreak={initialBreak} />
               </span>
               <div className="input-group-append">
                 {/* TODO: Implement decreasing break duration and disable during a focus or break session*/}
@@ -242,10 +214,12 @@ function Pomodoro() {
         <div className="row mb-2">
           <div className="col">
             {/* TODO: Update message below to include current session (Focusing or On Break) and total duration */}
-            <h2 data-testid="session-title">{setMessage()}</h2>
+            <h2 data-testid="session-title">
+                <SetMessage time={time} breakTime={breakTime} initialBreak={initialBreak} initialFocus={initialFocus} paused ={paused}/>
+            </h2>
             {/* TODO: Update message below to include time remaining in the current session */}
             <p className="lead" data-testid="session-sub-title">
-              {RemainingMessage()}
+              <RemainingMessage time={time} breakTime={breakTime} />
             </p>
           </div>
         </div>
