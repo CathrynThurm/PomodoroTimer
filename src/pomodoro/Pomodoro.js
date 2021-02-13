@@ -3,6 +3,7 @@ import classNames from "../utils/class-names";
 import useInterval from "../utils/useInterval";
 import SetMessage, {RemainingMessage} from "./messages";
 import FocusDuration, {BreakDuration} from "./FindDuration";
+import ShouldPlaySound from "./PlaySounds.js";
 
 
 function Pomodoro() {
@@ -15,18 +16,15 @@ function Pomodoro() {
   const [progressPercent, setProgressPercent] = useState(100);
   const [progressVal, setProgressVal] = useState(0);
   const [paused, setPaused] = useState(false);
-  
 
-   let alarm = new Audio(`http://localhost:3000/public/alarm/submarine-dive-horn.mp3`)
+  const minFocus = 5;
+  const minBreak = 1
+  const maxFocus = 60
+  const maxBreak = 15
 
-
-  const playSound = (sound) => {
-    try {sound.play()}
-    catch(error) {console.log(error)}
-  }
    
   const handleFocusDecrease = () => {
-    if(time-5 > 5) {
+    if(time-5 > minFocus) {
       setTime(time - 5)
     setInitialFocus(initialFocus - 5)}
     else {
@@ -36,7 +34,7 @@ function Pomodoro() {
   }
   
   const handleFocusIncrease = () => {
-    if(time+5 < 60){
+    if(time+5 < maxFocus){
       setTime(time + 5)
     setInitialFocus(initialFocus + 5)}
     else {setTime(60)
@@ -44,14 +42,14 @@ function Pomodoro() {
   }
   
   const handleBreakDecrease = () => {
-        if(breakTime-1 > 1) {
+        if(breakTime-1 > minBreak) {
           setBreakTime(breakTime - 1)
         setInitialBreak(initialBreak - 1)}
     else {setBreakTime(1)
          setInitialBreak(1)}
   }
   const handleBreakIncrease = () => {
-    if(breakTime+1 < 15){
+    if(breakTime+1 < maxBreak){
       setBreakTime(breakTime + 1)
     setInitialBreak(initialBreak + 1)}
     else {
@@ -83,6 +81,7 @@ function Pomodoro() {
     setPaused(false)
   }
 
+  
 
   useInterval(
     () => {
@@ -92,27 +91,32 @@ function Pomodoro() {
          setTime(time - 1/60)
          setProgressVal(time)
          setProgressPercent(time/initialFocus * 100)
+         ShouldPlaySound(time, breakTime, initialBreak)
        }
       
       else if(time === 0 && breakTime > 0) {
         setBreakTime(breakTime - 1/60)
         setProgressVal(initialFocus - breakTime)
         setProgressPercent((breakTime/initialBreak * 100))
+        ShouldPlaySound(time, breakTime, initialBreak)
+
       }
       else if (breakTime <= 0 && time <= 0) {
         setTime(initialFocus)
         setBreakTime(initialBreak)
         setProgressVal(0)
+        ShouldPlaySound(time, breakTime, initialBreak)
+
       }
        else {setTime(0)
-          //playSounds(alarm)
+        ShouldPlaySound(time, breakTime, initialBreak)
         }
       }
     },
     isTimerRunning ? 1000 : null
   );
  
-  //need to fix these return statements
+  
   return (
     <div className="pomodoro">
       <div className="row">
